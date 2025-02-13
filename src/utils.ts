@@ -1,37 +1,54 @@
+import axios from 'axios';
 import 'dotenv/config';
+import { APP_ID, DISCORD_TOKEN } from './app';
 
-export async function DiscordRequest(endpoint, options) {
-	// append endpoint to root API URL
-	const url = 'https://discord.com/api/v10/' + endpoint;
-	// Stringify payloads
-	if (options.body) options.body = JSON.stringify(options.body);
-	// Use fetch to make requests
-	const res = await fetch(url, {
-		headers: {
-			Authorization: `Bot ${process.env.DISCORD_TOKEN}`,
-			'Content-Type': 'application/json; charset=UTF-8',
-			'User-Agent':
-				'DiscordBot (https://github.com/discord/discord-example-app, 1.0.0)',
-		},
-		...options,
-	});
-	// throw API errors
-	if (!res.ok) {
-		const data = await res.json();
-		console.log(res.status);
-		throw new Error(JSON.stringify(data));
+export async function DiscordRequest(
+	endpoint: string,
+	options: { method: string; data?: any }
+) {
+	try {
+		// append endpoint to root API URL
+		const url = 'https://discord.com/api/v10/' + endpoint;
+		const res = await axios(url, {
+			headers: {
+				Authorization: `Bot ${DISCORD_TOKEN}`,
+				'Content-Type': 'application/json; charset=UTF-8',
+			},
+			...options,
+		});
+		return res;
+	} catch (error) {
+		console.log(error);
+		throw error;
 	}
-	// return original response
-	return res;
 }
 
-export async function InstallGlobalCommands(appId, commands) {
+export async function InstallGlobalCommands(commands: any) {
 	// API endpoint to overwrite global commands
-	const endpoint = `applications/${appId}/commands`;
+	const endpoint = `applications/${APP_ID}/commands`;
 	try {
 		// This is calling the bulk overwrite endpoint: https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands
-		await DiscordRequest(endpoint, { method: 'PUT', body: commands });
+		await DiscordRequest(endpoint, {
+			method: 'PUT',
+			data: commands,
+		});
 	} catch (err) {
 		console.error(err);
+	}
+}
+
+export async function deferResponse(
+	token: string,
+	userId: string,
+	url: string,
+	commentsDepth?: number
+): Promise<void> {
+	try {
+		// request screenshot from API
+		// send folloup response
+		// send dm to user?
+	} catch (err) {
+		console.error(err);
+		throw err;
 	}
 }
