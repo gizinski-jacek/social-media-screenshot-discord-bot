@@ -58,7 +58,8 @@ app.post(
 			const { name, options } = data;
 
 			// Take screenshot command
-			if (name === 'smss') {
+
+			if (name === 'ssit') {
 				// Send a message into the channel where command was triggered from
 				const url = options[0];
 				const commentsDepth = options[1];
@@ -75,7 +76,7 @@ app.post(
 					res.status(400).json({ error: 'url is not valid' });
 					return;
 				}
-				deferResponse(token, member.user.id, url.value, commentsDepth?.value);
+				deferResponse(token, member.user, url.value, commentsDepth?.value);
 				res.send({
 					type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
 					data: {
