@@ -37,10 +37,16 @@ export async function deferResponse(
 	token: string,
 	user: User,
 	url: string,
-	commentsDepth?: number
+	commentsDepth?: number,
+	nitter?: boolean
 ): Promise<void> {
 	try {
-		const screenshotUrl = await requestScreenshot(url, user.id, commentsDepth);
+		const screenshotUrl = await requestScreenshot(
+			url,
+			user.id,
+			commentsDepth,
+			nitter
+		);
 		sendFollowupResponse(token, screenshotUrl);
 		sendDMToUser(user.id, screenshotUrl);
 	} catch (error: unknown) {
@@ -60,7 +66,8 @@ export async function deferResponse(
 export async function requestScreenshot(
 	url: string,
 	userId: string,
-	commentsDepth?: number
+	commentsDepth?: number,
+	nitter?: boolean
 ): Promise<string> {
 	const hostname = new URL(url).hostname.replace('www.', '');
 	let service = hostname.slice(0, hostname.lastIndexOf('.'));
@@ -69,7 +76,12 @@ export async function requestScreenshot(
 	}
 	const resAPI: AxiosResponse<string> = await axios.post(
 		`${API_URI}/screenshot/${service}`,
-		{ postUrl: url, commentsDepth: commentsDepth || 0, discordId: userId },
+		{
+			postUrl: url,
+			commentsDepth: commentsDepth || 0,
+			nitter: nitter || false,
+			discordId: userId,
+		},
 		{ headers: { 'Content-Type': 'application/json' } }
 	);
 	return resAPI.data;
