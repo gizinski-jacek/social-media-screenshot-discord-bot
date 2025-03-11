@@ -55,28 +55,32 @@ app.post(
 		 * See https://discord.com/developers/docs/interactions/application-commands#slash-commands
 		 */
 		if (type === InteractionType.APPLICATION_COMMAND) {
-			const { name, options } = data;
+			const { name, options } = data as {
+				name: string;
+				options: { name: string; number: string; value: any }[];
+			};
 
 			// Take screenshot command
 
 			if (name === 'ssit') {
 				// Send a message into the channel where command was triggered from
-				const url = options[0];
-				const commentsDepth = options[1];
+				const url = options.find((o) => o.name === 'url')?.value;
+				const commentsDepth = options.find((o) => o.name === 'cd')?.value;
+				const nitter = options.find((o) => o.name === 'nitter')?.value;
 				if (!url) {
-					res.status(400).json({ error: 'url is required' });
+					res.status(400).json({ error: 'URL is required' });
 					return;
 				}
 				if (
-					!isURL(url.value, {
+					!isURL(url, {
 						protocols: ['http', 'https'],
 						require_protocol: true,
 					})
 				) {
-					res.status(400).json({ error: 'url is not valid' });
+					res.status(400).json({ error: 'Invalid URL' });
 					return;
 				}
-				deferResponse(token, member.user, url.value, commentsDepth?.value);
+				deferResponse(token, member.user, url, commentsDepth, nitter);
 				res.send({
 					type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
 					data: {
@@ -87,12 +91,12 @@ app.post(
 			}
 
 			console.error(`unknown command: ${name}`);
-			res.status(400).json({ error: 'unknown command' });
+			res.status(400).json({ error: 'Unknown command' });
 			return;
 		}
 
 		console.error('unknown interaction type', type);
-		res.status(400).json({ error: 'unknown interaction type' });
+		res.status(400).json({ error: 'Unknown interaction type' });
 		return;
 	}
 );
