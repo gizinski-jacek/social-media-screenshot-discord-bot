@@ -7,7 +7,10 @@ import {
 	verifyKeyMiddleware,
 } from 'discord-interactions';
 import { isURL } from 'class-validator';
-import { deferResponse } from './utils';
+import {
+	deferLastScreenshotResponse,
+	deferScreenshotItResponse,
+} from './utils';
 
 export const {
 	APP_ID,
@@ -40,15 +43,7 @@ app.post(
 	verifyKeyMiddleware(PUBLIC_KEY),
 	async function (req, res) {
 		// Interaction id, type and data
-		const { type, data, token, member } = req.body;
-
-		/**
-		 * Handle verification requests
-		 */
-		if (type === InteractionType.PING) {
-			res.send({ type: InteractionResponseType.PONG });
-			return;
-		}
+		const { type, data, token, context, member, user } = req.body;
 
 		/**
 		 * Handle slash command requests
@@ -59,16 +54,19 @@ app.post(
 				name: string;
 				options: { name: string; number: string; value: any }[];
 			};
-
+			const userData = context === 0 ? member.user : user;
+			if (!userData) {
+				res.status(400).json({ error: 'Error getting user.' });
+				return;
+			}
 			// Take screenshot command
-
 			if (name === 'ssit') {
 				// Send a message into the channel where command was triggered from
 				const url = options.find((o) => o.name === 'url')?.value;
 				const commentsDepth = options.find((o) => o.name === 'cd')?.value;
 				const nitter = options.find((o) => o.name === 'nitter')?.value;
 				if (!url) {
-					res.status(400).json({ error: 'URL is required' });
+					res.status(400).json({ error: 'URL is required.' });
 					return;
 				}
 				if (
@@ -77,16 +75,54 @@ app.post(
 						require_protocol: true,
 					})
 				) {
-					res.status(400).json({ error: 'Invalid URL' });
+					res.status(400).json({ error: 'Invalid URL.' });
 					return;
 				}
-				deferResponse(token, member.user, url, commentsDepth, nitter);
-				res.send({
-					type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-					data: {
-						flags: InteractionResponseFlags.EPHEMERAL,
-					},
-				});
+				deferScreenshotItResponse(
+					token,
+					userData,
+					context,
+					url,
+					commentsDepth,
+					nitter
+				);
+				// Context dependant response. Accepted contexts by command are 0 and 1.
+				// Context 0 indicates user triggered event from discord server channel,
+				// Response to channel will be ephemeral (visible only to user).
+				// Defered message will be patched into this response and also sent to user's DM's.
+				// Context 1 indicates event triggered from DM's with bot, therefore no need
+				// for ephemeral flag. Defered message will be patched into this response.
+				const response =
+					context === 0
+						? {
+								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+								data: {
+									flags: InteractionResponseFlags.EPHEMERAL,
+								},
+						  }
+						: {
+								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+						  };
+				res.send(response);
+				return;
+			}
+
+			// Resend last screenshot taken for user
+			if (name === 'sslast') {
+				const social = options?.find((o) => o.name === 'social')?.value;
+				deferLastScreenshotResponse(token, userData, context, social);
+				const response =
+					context === 0
+						? {
+								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+								data: {
+									flags: InteractionResponseFlags.EPHEMERAL,
+								},
+						  }
+						: {
+								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+						  };
+				res.send(response);
 				return;
 			}
 
