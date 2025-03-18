@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { InstallGlobalCommands } from './utils';
 
-const SCREENSHOT_COMMAND = {
+const SCREENSHOT_IT_COMMAND = {
 	name: 'ssit',
 	description: 'Take screenshot of social media post',
 	options: [
@@ -23,16 +23,48 @@ const SCREENSHOT_COMMAND = {
 		{
 			type: 5,
 			name: 'nitter',
-			description:
-				'Use nitter as alternative to include comments? (for Twitter links only)',
+			description: 'Use Nitter as Twitter alternative to include comments?',
 			required: false,
 		},
 	],
 	type: 1,
-	integration_types: [0, 1],
-	contexts: [0, 2],
+	integration_types: [0],
+	contexts: [0, 1],
 };
 
-const ALL_COMMANDS = [SCREENSHOT_COMMAND];
+const SCREENSHOT_LAST_COMMAND = {
+	name: 'sslast',
+	description: 'Resend last screenshot taken',
+	options: [
+		{
+			type: 3,
+			name: 'social',
+			description: 'From specific social media?',
+			choices: [
+				{
+					name: 'Bluesky',
+					value: 'bsky',
+				},
+				{
+					name: 'X/Twitter',
+					value: 'twitter',
+				},
+				{
+					name: 'Facebook',
+					value: 'facebook',
+				},
+				{
+					name: 'Instagram',
+					value: 'instagram',
+				},
+			],
+		},
+	],
+	type: 1,
+	integration_types: [0],
+	contexts: [0, 1],
+};
+
+const ALL_COMMANDS = [SCREENSHOT_IT_COMMAND, SCREENSHOT_LAST_COMMAND];
 
 InstallGlobalCommands(ALL_COMMANDS);
