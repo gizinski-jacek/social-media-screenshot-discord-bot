@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import 'dotenv/config';
 import { API_URI, APP_ID, DISCORD_TOKEN } from './app';
-import { User } from './types';
+import { ScreenshotData, User } from './types';
 
 export async function DiscordRequest(
 	endpoint: string,
@@ -33,22 +33,23 @@ export async function InstallGlobalCommands(commands: any) {
 	}
 }
 
-export async function deferResponse(
+export async function deferScreenshotItResponse(
 	token: string,
 	user: User,
+	context: number,
 	url: string,
 	commentsDepth?: number,
 	nitter?: boolean
 ): Promise<void> {
 	try {
-		const screenshotUrl = await requestScreenshot(
-			url,
-			user.id,
-			commentsDepth,
-			nitter
-		);
-		sendFollowupResponse(token, screenshotUrl);
-		sendDMToUser(user.id, screenshotUrl);
+		const data = await requestScreenshot(url, user.id, commentsDepth, nitter);
+		const message = formatMessage(data);
+		if (context === 0) {
+			sendFollowupResponse(token, message);
+			sendDMToUser(user.id, message);
+		} else {
+			sendFollowupResponse(token, message);
+		}
 	} catch (error: unknown) {
 		if (error instanceof AxiosError) {
 			console.error(error.response);
@@ -63,18 +64,47 @@ export async function deferResponse(
 	}
 }
 
+export async function deferLastScreenshotResponse(
+	token: string,
+	user: User,
+	context: number,
+	social: string
+): Promise<void> {
+	try {
+		const data = await requestLastScreenshot(user.id, social);
+		const message = formatMessage(data);
+		if (context === 0) {
+			sendFollowupResponse(token, message);
+			sendDMToUser(user.id, message);
+		} else {
+			sendFollowupResponse(token, message);
+		}
+	} catch (error: unknown) {
+		if (error instanceof AxiosError) {
+			console.error(error.response);
+			sendFollowupResponse(
+				token,
+				error.response?.data.message || 'Error getting last screenshot taken.'
+			);
+		} else {
+			console.error(error);
+			sendFollowupResponse(token, 'Error getting last screenshot taken.');
+		}
+	}
+}
+
 export async function requestScreenshot(
 	url: string,
 	userId: string,
 	commentsDepth?: number,
 	nitter?: boolean
-): Promise<string> {
+): Promise<ScreenshotData> {
 	const hostname = new URL(url).hostname.replace('www.', '');
 	let service = hostname.slice(0, hostname.lastIndexOf('.'));
 	if (service === 'x') {
 		service = 'twitter';
 	}
-	const resAPI: AxiosResponse<string> = await axios.post(
+	const resAPI: AxiosResponse<ScreenshotData> = await axios.post(
 		`${API_URI}/screenshot/${service}`,
 		{
 			postUrl: url,
@@ -82,6 +112,18 @@ export async function requestScreenshot(
 			nitter: nitter || false,
 			discordId: userId,
 		},
+		{ headers: { 'Content-Type': 'application/json' } }
+	);
+	return resAPI.data;
+}
+
+export async function requestLastScreenshot(
+	userId: string,
+	social?: string
+): Promise<ScreenshotData> {
+	const resAPI: AxiosResponse<ScreenshotData> = await axios.post(
+		`${API_URI}/user/last-screenshot`,
+		{ discordId: userId, social: social },
 		{ headers: { 'Content-Type': 'application/json' } }
 	);
 	return resAPI.data;
@@ -117,4 +159,18 @@ export async function createDMChannelWithUser(userId: string): Promise<string> {
 		data: { recipient_id: userId },
 	});
 	return res.data.id;
+}
+
+function formatMessage(data: ScreenshotData): string {
+	const date = new Date(data.date).toLocaleDateString('en-GB', {
+		weekday: 'short',
+		year: 'numeric',
+		month: 'numeric',
+		day: 'numeric',
+		hour: 'numeric',
+		minute: 'numeric',
+		second: 'numeric',
+		hour12: false,
+	});
+	return `${data.url} ${data.service} ${data.userHandle} ${date}`;
 }
