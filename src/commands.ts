@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { InstallGlobalCommands } from './utils';
 
 const SCREENSHOT_IT_COMMAND = {
@@ -21,7 +20,7 @@ const SCREENSHOT_IT_COMMAND = {
 			max_value: 10,
 		},
 		{
-			type: 5,
+			type: 3,
 			name: 'nitter',
 			description: 'Use Nitter as Twitter alternative to include comments?',
 			required: false,
@@ -32,9 +31,9 @@ const SCREENSHOT_IT_COMMAND = {
 	contexts: [0, 1],
 };
 
-const SCREENSHOT_LAST_COMMAND = {
-	name: 'sslast',
-	description: 'Resend last screenshot taken',
+const MOST_RECENT_SCREENSHOT_COMMAND = {
+	name: 'ssrecent',
+	description: 'Resend most recent screenshot taken',
 	options: [
 		{
 			type: 3,
@@ -65,6 +64,43 @@ const SCREENSHOT_LAST_COMMAND = {
 	contexts: [0, 1],
 };
 
-const ALL_COMMANDS = [SCREENSHOT_IT_COMMAND, SCREENSHOT_LAST_COMMAND];
+const DELETE_MOST_RECENT_SCREENSHOT_COMMAND = {
+	name: 'ssdeleterecent',
+	description: 'Delete most recent screenshot taken',
+	options: [
+		{
+			type: 3,
+			name: 'social',
+			description: 'From specific social media?',
+			choices: [
+				{
+					name: 'Bluesky',
+					value: 'bsky',
+				},
+				{
+					name: 'X/Twitter',
+					value: 'twitter',
+				},
+				{
+					name: 'Facebook',
+					value: 'facebook',
+				},
+				{
+					name: 'Instagram',
+					value: 'instagram',
+				},
+			],
+		},
+	],
+	type: 1,
+	integration_types: [0],
+	contexts: [0, 1],
+};
+
+const ALL_COMMANDS = [
+	SCREENSHOT_IT_COMMAND,
+	MOST_RECENT_SCREENSHOT_COMMAND,
+	DELETE_MOST_RECENT_SCREENSHOT_COMMAND,
+];
 
 InstallGlobalCommands(ALL_COMMANDS);
