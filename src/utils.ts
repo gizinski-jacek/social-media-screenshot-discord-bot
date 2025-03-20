@@ -33,7 +33,7 @@ export async function InstallGlobalCommands(commands: any) {
 	}
 }
 
-export async function deferScreenshotItResponse(
+export async function deferScreenshotItRes(
 	token: string,
 	user: User,
 	context: number,
@@ -45,51 +45,54 @@ export async function deferScreenshotItResponse(
 		const data = await requestScreenshot(url, user.id, commentsDepth, nitter);
 		const message = formatMessage(data);
 		if (context === 0) {
-			sendFollowupResponse(token, message);
+			sendFollowupRes(token, message);
 			sendDMToUser(user.id, message);
 		} else {
-			sendFollowupResponse(token, message);
+			sendFollowupRes(token, message);
 		}
 	} catch (error: unknown) {
-		if (error instanceof AxiosError) {
-			console.error(error.response);
-			sendFollowupResponse(
-				token,
-				error.response?.data.message || 'Error taking a screenshot.'
-			);
-		} else {
-			console.error(error);
-			sendFollowupResponse(token, 'Error taking a screenshot.');
-		}
+		errorHandle(token, error);
 	}
 }
 
-export async function deferLastScreenshotResponse(
+export async function deferMostRecentScreenshotRes(
 	token: string,
 	user: User,
 	context: number,
-	social: string
+	social?: string
 ): Promise<void> {
 	try {
-		const data = await requestLastScreenshot(user.id, social);
+		const data = await getMostRecentScreenshot(user.id, social);
 		const message = formatMessage(data);
 		if (context === 0) {
-			sendFollowupResponse(token, message);
+			sendFollowupRes(token, message);
 			sendDMToUser(user.id, message);
 		} else {
-			sendFollowupResponse(token, message);
+			sendFollowupRes(token, message);
 		}
 	} catch (error: unknown) {
-		if (error instanceof AxiosError) {
-			console.error(error.response);
-			sendFollowupResponse(
-				token,
-				error.response?.data.message || 'Error getting last screenshot taken.'
-			);
+		errorHandle(token, error);
+	}
+}
+
+export async function deferDeleteMostRecentScreenshotRes(
+	token: string,
+	user: User,
+	context: number,
+	social?: string
+): Promise<void> {
+	try {
+		const res = await deleteMostRecentScreenshot(user.id, social);
+		res.url = 'Deleted';
+		const message = formatMessage(res);
+		if (context === 0) {
+			sendFollowupRes(token, message);
+			sendDMToUser(user.id, message);
 		} else {
-			console.error(error);
-			sendFollowupResponse(token, 'Error getting last screenshot taken.');
+			sendFollowupRes(token, message);
 		}
+	} catch (error: unknown) {
+		errorHandle(token, error);
 	}
 }
 
@@ -117,19 +120,33 @@ export async function requestScreenshot(
 	return resAPI.data;
 }
 
-export async function requestLastScreenshot(
+export async function getMostRecentScreenshot(
 	userId: string,
 	social?: string
 ): Promise<ScreenshotData> {
 	const resAPI: AxiosResponse<ScreenshotData> = await axios.post(
-		`${API_URI}/user/last-screenshot`,
+		`${API_URI}/user/recent-screenshot`,
 		{ discordId: userId, social: social },
 		{ headers: { 'Content-Type': 'application/json' } }
 	);
 	return resAPI.data;
 }
 
-export async function sendFollowupResponse(
+export async function deleteMostRecentScreenshot(
+	userId: string,
+	social?: string
+): Promise<ScreenshotData> {
+	const resAPI: AxiosResponse<ScreenshotData> = await axios.delete(
+		`${API_URI}/user/recent-screenshot`,
+		{
+			data: { discordId: userId, social: social },
+			headers: { 'Content-Type': 'application/json' },
+		}
+	);
+	return resAPI.data;
+}
+
+export async function sendFollowupRes(
 	token: string,
 	message: string
 ): Promise<void> {
@@ -162,7 +179,7 @@ export async function createDMChannelWithUser(userId: string): Promise<string> {
 }
 
 function formatMessage(data: ScreenshotData): string {
-	const date = new Date(data.date).toLocaleDateString('en-GB', {
+	const date = new Date(data.timestamp).toLocaleDateString('en-GB', {
 		weekday: 'short',
 		year: 'numeric',
 		month: 'numeric',
@@ -170,7 +187,25 @@ function formatMessage(data: ScreenshotData): string {
 		hour: 'numeric',
 		minute: 'numeric',
 		second: 'numeric',
+		fractionalSecondDigits: 3,
 		hour12: false,
 	});
 	return `${data.url} ${data.service} ${data.userHandle} ${date}`;
+}
+
+function errorHandle(token: string, error: unknown): void {
+	if (error instanceof AxiosError) {
+		console.error(error.response);
+		sendFollowupRes(
+			token,
+			error.response?.data.message || 'Error getting data.'
+		);
+	} else {
+		console.error(error);
+		sendFollowupRes(
+			token,
+			// @ts-expect-error
+			error?.message || 'Error getting data.'
+		);
+	}
 }
