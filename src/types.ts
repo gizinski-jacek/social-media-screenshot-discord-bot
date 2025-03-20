@@ -45,5 +45,5 @@ export interface ScreenshotData {
 	url: string;
 	service: string;
 	userHandle: string;
-	date: string;
+	timestamp: string;
 }
