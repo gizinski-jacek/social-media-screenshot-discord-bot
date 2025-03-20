@@ -8,8 +8,9 @@ import {
 } from 'discord-interactions';
 import { isURL } from 'class-validator';
 import {
-	deferLastScreenshotResponse,
-	deferScreenshotItResponse,
+	deferDeleteMostRecentScreenshotRes,
+	deferMostRecentScreenshotRes,
+	deferScreenshotItRes,
 } from './utils';
 
 export const {
@@ -59,6 +60,23 @@ app.post(
 				res.status(400).json({ error: 'Error getting user.' });
 				return;
 			}
+			// Context dependant response. Accepted contexts by command are 0 and 1.
+			// Context 0 indicates user triggered event from discord server channel,
+			// Response to channel will be ephemeral (visible only to user).
+			// Defered message will be patched into this response and also sent to user's DM's.
+			// Context 1 indicates event triggered from DM's with bot, therefore no need
+			// for ephemeral flag. Defered message will be patched into this response.
+			const response =
+				context === 0
+					? {
+							type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+							data: {
+								flags: InteractionResponseFlags.EPHEMERAL,
+							},
+					  }
+					: {
+							type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+					  };
 			// Take screenshot command
 			if (name === 'ssit') {
 				// Send a message into the channel where command was triggered from
@@ -78,7 +96,7 @@ app.post(
 					res.status(400).json({ error: 'Invalid URL.' });
 					return;
 				}
-				deferScreenshotItResponse(
+				deferScreenshotItRes(
 					token,
 					userData,
 					context,
@@ -86,42 +104,22 @@ app.post(
 					commentsDepth,
 					nitter
 				);
-				// Context dependant response. Accepted contexts by command are 0 and 1.
-				// Context 0 indicates user triggered event from discord server channel,
-				// Response to channel will be ephemeral (visible only to user).
-				// Defered message will be patched into this response and also sent to user's DM's.
-				// Context 1 indicates event triggered from DM's with bot, therefore no need
-				// for ephemeral flag. Defered message will be patched into this response.
-				const response =
-					context === 0
-						? {
-								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-								data: {
-									flags: InteractionResponseFlags.EPHEMERAL,
-								},
-						  }
-						: {
-								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-						  };
 				res.send(response);
 				return;
 			}
 
-			// Resend last screenshot taken for user
-			if (name === 'sslast') {
+			// Resend most recent screenshot taken for user
+			if (name === 'ssrecent') {
 				const social = options?.find((o) => o.name === 'social')?.value;
-				deferLastScreenshotResponse(token, userData, context, social);
-				const response =
-					context === 0
-						? {
-								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-								data: {
-									flags: InteractionResponseFlags.EPHEMERAL,
-								},
-						  }
-						: {
-								type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-						  };
+				deferMostRecentScreenshotRes(token, userData, context, social);
+				res.send(response);
+				return;
+			}
+
+			// Delete most recent screenshot taken for user
+			if (name === 'ssdeleterecent') {
+				const social = options?.find((o) => o.name === 'social')?.value;
+				deferDeleteMostRecentScreenshotRes(token, userData, context, social);
 				res.send(response);
 				return;
 			}
