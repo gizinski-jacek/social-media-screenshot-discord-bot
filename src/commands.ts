@@ -97,10 +97,54 @@ const DELETE_MOST_RECENT_SCREENSHOT_COMMAND = {
 	contexts: [0, 1],
 };
 
+const SCREENSHOT_FROM_TO_DATE_COMMAND = {
+	name: 'ssfromtodate',
+	description: 'Get screenshots in a date range',
+	options: [
+		{
+			type: 3,
+			name: 'from-date',
+			description: 'From date (YYYY-MM-DD format)',
+		},
+		{
+			type: 3,
+			name: 'to-date',
+			description: 'To date (YYYY-MM-DD format)',
+		},
+		{
+			type: 3,
+			name: 'social',
+			description: 'From specific social media?',
+			choices: [
+				{
+					name: 'Bluesky',
+					value: 'bsky',
+				},
+				{
+					name: 'X/Twitter',
+					value: 'twitter',
+				},
+				{
+					name: 'Facebook',
+					value: 'facebook',
+				},
+				{
+					name: 'Instagram',
+					value: 'instagram',
+				},
+			],
+		},
+	],
+	type: 1,
+	integration_types: [0],
+	contexts: [0, 1],
+};
+
 const ALL_COMMANDS = [
 	SCREENSHOT_IT_COMMAND,
 	MOST_RECENT_SCREENSHOT_COMMAND,
 	DELETE_MOST_RECENT_SCREENSHOT_COMMAND,
+	SCREENSHOT_FROM_TO_DATE_COMMAND,
 ];
 
 InstallGlobalCommands(ALL_COMMANDS);

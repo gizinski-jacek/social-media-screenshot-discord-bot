@@ -9,6 +9,7 @@ import {
 import { isURL } from 'class-validator';
 import {
 	deferDeleteMostRecentScreenshotRes,
+	deferGetScreenshotsFromToDateRes,
 	deferMostRecentScreenshotRes,
 	deferScreenshotItRes,
 } from './utils';
@@ -120,6 +121,23 @@ app.post(
 			if (name === 'ssdeleterecent') {
 				const social = options?.find((o) => o.name === 'social')?.value;
 				deferDeleteMostRecentScreenshotRes(token, userData, context, social);
+				res.send(response);
+				return;
+			}
+
+			// Get screenshots in a date range
+			if (name === 'ssfromtodate') {
+				const social = options?.find((o) => o.name === 'social')?.value;
+				const fromDate = options?.find((o) => o.name === 'from-date')?.value;
+				const toDate = options?.find((o) => o.name === 'to-date')?.value;
+				deferGetScreenshotsFromToDateRes(
+					token,
+					userData,
+					context,
+					fromDate,
+					toDate,
+					social
+				);
 				res.send(response);
 				return;
 			}
