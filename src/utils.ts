@@ -43,11 +43,16 @@ export async function deferScreenshotItRes(
 ): Promise<void> {
 	try {
 		const data = await requestScreenshot(url, user.id, commentsDepth, nitter);
+		data.url = await shortenUrl(data.url);
 		const message = formatMessage(data);
+		// Context 0 indicates user triggered event from discord server channel.
+		// Defered message will be patched into this response and also sent to user's DM's.
+		// Context 1 indicates event triggered from DM's with bot.
+		// Defered message will be patched into this response. If else check prevents doubling the message.
 		if (context === 0) {
 			sendFollowupRes(token, message);
 			sendDMToUser(user.id, message);
-		} else {
+		} else if (context === 1) {
 			sendFollowupRes(token, message);
 		}
 	} catch (error: unknown) {
@@ -63,11 +68,12 @@ export async function deferMostRecentScreenshotRes(
 ): Promise<void> {
 	try {
 		const data = await getMostRecentScreenshot(user.id, social);
+		data.url = await shortenUrl(data.url);
 		const message = formatMessage(data);
 		if (context === 0) {
 			sendFollowupRes(token, message);
 			sendDMToUser(user.id, message);
-		} else {
+		} else if (context === 1) {
 			sendFollowupRes(token, message);
 		}
 	} catch (error: unknown) {
@@ -88,9 +94,63 @@ export async function deferDeleteMostRecentScreenshotRes(
 		if (context === 0) {
 			sendFollowupRes(token, message);
 			sendDMToUser(user.id, message);
-		} else {
+		} else if (context === 1) {
 			sendFollowupRes(token, message);
 		}
+	} catch (error: unknown) {
+		errorHandle(token, error);
+	}
+}
+
+export async function deferGetScreenshotsFromToDateRes(
+	token: string,
+	user: User,
+	context: number,
+	fromDate: string,
+	toDate: string,
+	social?: string
+): Promise<void> {
+	let i = 0;
+	try {
+		const res = await getScreenshotFromToDateRes(
+			user.id,
+			fromDate,
+			toDate,
+			social
+		);
+		const shortUrlsPromisesArray: (() => Promise<string>)[] = res.map(
+			(data) => () =>
+				new Promise((resolve, reject) =>
+					setTimeout(async () => {
+						try {
+							const short: string = await shortenUrl(data.url);
+							resolve(short);
+						} catch (error) {
+							reject(error);
+						}
+					}, 250)
+				)
+		);
+		const shortUrlsArray = await executeSequentially(shortUrlsPromisesArray);
+		const splitUrls: string[][] = shortUrlsArray.reduce((prev, curr) => {
+			if (prev[prev.length - 1].join(',').length + curr.length <= 150) {
+				prev[prev.length - 1].push(curr);
+				return prev;
+			} else {
+				const newArray = [curr];
+				prev.push(newArray);
+				return prev;
+			}
+		}, new Array(new Array()));
+		splitUrls.forEach((array, i) => {
+			setTimeout(() => {
+				if (context === 0) {
+					sendDMToUser(user.id, array.join('\n'));
+				} else if (context === 1) {
+					sendFollowupRes(token, array.join('\n'));
+				}
+			}, i * 2500);
+		});
 	} catch (error: unknown) {
 		errorHandle(token, error);
 	}
@@ -146,6 +206,20 @@ export async function deleteMostRecentScreenshot(
 	return resAPI.data;
 }
 
+export async function getScreenshotFromToDateRes(
+	userId: string,
+	fromDate: string,
+	toDate: string,
+	social?: string
+): Promise<ScreenshotData[]> {
+	const resAPI: AxiosResponse<ScreenshotData[]> = await axios.post(
+		`${API_URI}/user/screenshot-from-to-date`,
+		{ discordId: userId, social: social, fromDate: fromDate, toDate: toDate },
+		{ headers: { 'Content-Type': 'application/json' } }
+	);
+	return resAPI.data;
+}
+
 export async function sendFollowupRes(
 	token: string,
 	message: string
@@ -191,6 +265,24 @@ function formatMessage(data: ScreenshotData): string {
 		hour12: false,
 	});
 	return `${data.url} ${data.service} ${data.userHandle} ${date}`;
+}
+
+async function shortenUrl(url: string): Promise<string> {
+	const newUrl = new URL(url);
+	const res = await axios.get(
+		'https://tinyurl.com/api-create.php?url=' + newUrl.href
+	);
+	return res.data;
+}
+
+async function executeSequentially<T>(
+	promisesArray: (() => Promise<T>)[]
+): Promise<T[]> {
+	const results: T[] = [];
+	for (const promise of promisesArray) {
+		results.push(await promise());
+	}
+	return results;
 }
 
 function errorHandle(token: string, error: unknown): void {
