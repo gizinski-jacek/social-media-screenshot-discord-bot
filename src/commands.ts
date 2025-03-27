@@ -1,7 +1,7 @@
 import { InstallGlobalCommands } from './utils';
 
 const SCREENSHOT_IT_COMMAND = {
-	name: 'ssit',
+	name: 'smss-it',
 	description: 'Take screenshot of social media post',
 	options: [
 		{
@@ -32,7 +32,7 @@ const SCREENSHOT_IT_COMMAND = {
 };
 
 const MOST_RECENT_SCREENSHOT_COMMAND = {
-	name: 'ssrecent',
+	name: 'smss-recent',
 	description: 'Resend most recent screenshot taken',
 	options: [
 		{
@@ -65,7 +65,7 @@ const MOST_RECENT_SCREENSHOT_COMMAND = {
 };
 
 const DELETE_MOST_RECENT_SCREENSHOT_COMMAND = {
-	name: 'ssdeleterecent',
+	name: 'smss-delete-recent',
 	description: 'Delete most recent screenshot taken',
 	options: [
 		{
@@ -98,8 +98,8 @@ const DELETE_MOST_RECENT_SCREENSHOT_COMMAND = {
 };
 
 const DELETE_SPECIFIC_SCREENSHOT_COMMAND = {
-	name: 'ssdeleteid',
-	description: 'Delete most recent screenshot taken',
+	name: 'smss-delete-id',
+	description: 'Delete specific screenshot taken',
 	options: [
 		{
 			type: 3,
@@ -113,19 +113,19 @@ const DELETE_SPECIFIC_SCREENSHOT_COMMAND = {
 	contexts: [0, 1],
 };
 
-const SCREENSHOT_FROM_TO_DATE_COMMAND = {
-	name: 'ssfromtodate',
+const SCREENSHOT_START_TO_END_DATE_COMMAND = {
+	name: 'smss-date-range',
 	description: 'Get screenshots in a date range',
 	options: [
 		{
 			type: 3,
-			name: 'from-date',
-			description: 'From date (YYYY-MM-DD format)',
+			name: 'start-date',
+			description: 'Start date (YYYY-MM-DD format)',
 		},
 		{
 			type: 3,
-			name: 'to-date',
-			description: 'To date (YYYY-MM-DD format)',
+			name: 'end-date',
+			description: 'End date (YYYY-MM-DD format)',
 		},
 		{
 			type: 3,
@@ -161,7 +161,7 @@ const ALL_COMMANDS = [
 	MOST_RECENT_SCREENSHOT_COMMAND,
 	DELETE_MOST_RECENT_SCREENSHOT_COMMAND,
 	DELETE_SPECIFIC_SCREENSHOT_COMMAND,
-	SCREENSHOT_FROM_TO_DATE_COMMAND,
+	SCREENSHOT_START_TO_END_DATE_COMMAND,
 ];
 
 InstallGlobalCommands(ALL_COMMANDS);
