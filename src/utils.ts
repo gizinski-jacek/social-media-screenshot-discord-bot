@@ -329,16 +329,13 @@ async function executeSequentially<T>(
 function errorHandle(token: string, error: unknown): void {
 	if (error instanceof AxiosError) {
 		console.error(error.response);
-		sendFollowupRes(
-			token,
-			error.response?.data.message || 'Error getting data.'
-		);
+		sendFollowupRes(token, error.response?.data.message || 'API server error.');
 	} else {
 		console.error(error);
 		sendFollowupRes(
 			token,
 			// @ts-expect-error
-			error?.message || 'Error getting data.'
+			error?.message || 'API server error.'
 		);
 	}
 }

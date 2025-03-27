@@ -59,7 +59,7 @@ app.post(
 			};
 			const userData = context === 0 ? member.user : user;
 			if (!userData) {
-				res.status(400).json({ error: 'Error getting user.' });
+				res.status(400).json({ error: 'Error getting discord user info.' });
 				return;
 			}
 			// Context dependant response. Accepted contexts by command are 0 and 1.
