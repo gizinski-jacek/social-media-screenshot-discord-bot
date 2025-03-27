@@ -97,6 +97,22 @@ const DELETE_MOST_RECENT_SCREENSHOT_COMMAND = {
 	contexts: [0, 1],
 };
 
+const DELETE_SPECIFIC_SCREENSHOT_COMMAND = {
+	name: 'ssdeleteid',
+	description: 'Delete most recent screenshot taken',
+	options: [
+		{
+			type: 3,
+			name: 'id',
+			description: 'Screenshot Id (filename)',
+			required: true,
+		},
+	],
+	type: 1,
+	integration_types: [0],
+	contexts: [0, 1],
+};
+
 const SCREENSHOT_FROM_TO_DATE_COMMAND = {
 	name: 'ssfromtodate',
 	description: 'Get screenshots in a date range',
@@ -144,6 +160,7 @@ const ALL_COMMANDS = [
 	SCREENSHOT_IT_COMMAND,
 	MOST_RECENT_SCREENSHOT_COMMAND,
 	DELETE_MOST_RECENT_SCREENSHOT_COMMAND,
+	DELETE_SPECIFIC_SCREENSHOT_COMMAND,
 	SCREENSHOT_FROM_TO_DATE_COMMAND,
 ];
 

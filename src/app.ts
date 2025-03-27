@@ -9,6 +9,7 @@ import {
 import { isURL } from 'class-validator';
 import {
 	deferDeleteMostRecentScreenshotRes,
+	deferDeleteSpecificScreenshotRes,
 	deferGetScreenshotsFromToDateRes,
 	deferMostRecentScreenshotRes,
 	deferScreenshotItRes,
@@ -121,6 +122,19 @@ app.post(
 			if (name === 'ssdeleterecent') {
 				const social = options?.find((o) => o.name === 'social')?.value;
 				deferDeleteMostRecentScreenshotRes(token, userData, context, social);
+				res.send(response);
+				return;
+			}
+
+			// Delete specific screenshot taken for user
+			if (name === 'ssdeleteid') {
+				const id = options?.find((o) => o.name === 'id')?.value;
+				const social = options?.find((o) => o.name === 'social')?.value;
+				if (!id) {
+					res.status(400).json({ error: 'Id (filename) is required.' });
+					return;
+				}
+				deferDeleteSpecificScreenshotRes(token, userData, context, id, social);
 				res.send(response);
 				return;
 			}

@@ -102,6 +102,28 @@ export async function deferDeleteMostRecentScreenshotRes(
 	}
 }
 
+export async function deferDeleteSpecificScreenshotRes(
+	token: string,
+	user: User,
+	context: number,
+	id: string,
+	social?: string
+): Promise<void> {
+	try {
+		const res = await deleteSpecificScreenshot(user.id, id, social);
+		res.url = 'Deleted';
+		const message = formatMessage(res);
+		if (context === 0) {
+			sendFollowupRes(token, message);
+			sendDMToUser(user.id, message);
+		} else if (context === 1) {
+			sendFollowupRes(token, message);
+		}
+	} catch (error: unknown) {
+		errorHandle(token, error);
+	}
+}
+
 export async function deferGetScreenshotsFromToDateRes(
 	token: string,
 	user: User,
@@ -199,6 +221,21 @@ export async function deleteMostRecentScreenshot(
 		`${API_URI}/user/recent-screenshot`,
 		{
 			data: { discordId: userId, social: social },
+			headers: { 'Content-Type': 'application/json' },
+		}
+	);
+	return resAPI.data;
+}
+
+export async function deleteSpecificScreenshot(
+	userId: string,
+	id: string,
+	social?: string
+): Promise<ScreenshotData> {
+	const resAPI: AxiosResponse<ScreenshotData> = await axios.delete(
+		`${API_URI}/user/specific-screenshot`,
+		{
+			data: { discordId: userId, id: id, social: social },
 			headers: { 'Content-Type': 'application/json' },
 		}
 	);
