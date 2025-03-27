@@ -127,15 +127,32 @@ app.post(
 
 			// Get screenshots in a date range
 			if (name === 'ssfromtodate') {
-				const social = options?.find((o) => o.name === 'social')?.value;
 				const fromDate = options?.find((o) => o.name === 'from-date')?.value;
 				const toDate = options?.find((o) => o.name === 'to-date')?.value;
+				const social = options?.find((o) => o.name === 'social')?.value;
+				const newFromDate = new Date(fromDate).getTime();
+				const newToDate = new Date(toDate).getTime();
+				if (
+					(Object.prototype.toString.call(newFromDate) !== '[object Date]' &&
+						isNaN(newFromDate)) ||
+					(Object.prototype.toString.call(newToDate) !== '[object Date]' &&
+						isNaN(newToDate))
+				) {
+					res.status(400).json({ error: 'Invalid dates format.' });
+					return;
+				}
+				if (newFromDate > newToDate) {
+					res.status(400).json({
+						error: 'From date can not be newer than To date.',
+					});
+					return;
+				}
 				deferGetScreenshotsFromToDateRes(
 					token,
 					userData,
 					context,
-					fromDate,
-					toDate,
+					newFromDate,
+					newToDate,
 					social
 				);
 				res.send(response);
