@@ -10,7 +10,7 @@ import { isURL } from 'class-validator';
 import {
 	deferDeleteMostRecentScreenshotRes,
 	deferDeleteSpecificScreenshotRes,
-	deferGetScreenshotsFromToDateRes,
+	deferGetScreenshotsStartToEndDateRes,
 	deferMostRecentScreenshotRes,
 	deferScreenshotItRes,
 } from './utils';
@@ -80,7 +80,7 @@ app.post(
 							type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
 					  };
 			// Take screenshot command
-			if (name === 'ssit') {
+			if (name === 'smss-it') {
 				// Send a message into the channel where command was triggered from
 				const url = options.find((o) => o.name === 'url')?.value;
 				const commentsDepth = options.find((o) => o.name === 'cd')?.value;
@@ -111,7 +111,7 @@ app.post(
 			}
 
 			// Resend most recent screenshot taken for user
-			if (name === 'ssrecent') {
+			if (name === 'smss-recent') {
 				const social = options?.find((o) => o.name === 'social')?.value;
 				deferMostRecentScreenshotRes(token, userData, context, social);
 				res.send(response);
@@ -119,54 +119,59 @@ app.post(
 			}
 
 			// Delete most recent screenshot taken for user
-			if (name === 'ssdeleterecent') {
-				const social = options?.find((o) => o.name === 'social')?.value;
-				deferDeleteMostRecentScreenshotRes(token, userData, context, social);
+			if (name === 'smss-delete-recent') {
+				const service = options?.find((o) => o.name === 'social')?.value;
+				deferDeleteMostRecentScreenshotRes(token, userData, context, service);
 				res.send(response);
 				return;
 			}
 
 			// Delete specific screenshot taken for user
-			if (name === 'ssdeleteid') {
-				const id = options?.find((o) => o.name === 'id')?.value;
-				if (!id) {
+			if (name === 'smss-delete-id') {
+				const screenshotId = options?.find((o) => o.name === 'id')?.value;
+				if (!screenshotId) {
 					res.status(400).json({ error: 'Id (filename) is required.' });
 					return;
 				}
-				deferDeleteSpecificScreenshotRes(token, userData, context, id);
+				deferDeleteSpecificScreenshotRes(
+					token,
+					userData,
+					context,
+					screenshotId
+				);
 				res.send(response);
 				return;
 			}
 
 			// Get screenshots in a date range
-			if (name === 'ssfromtodate') {
-				const fromDate = options?.find((o) => o.name === 'from-date')?.value;
-				const toDate = options?.find((o) => o.name === 'to-date')?.value;
-				const social = options?.find((o) => o.name === 'social')?.value;
-				const newFromDate = new Date(fromDate).getTime();
-				const newToDate = new Date(toDate).getTime();
+			if (name === 'smss-date-range') {
+				const startDate = options?.find((o) => o.name === 'start-date')?.value;
+				const endDate = options?.find((o) => o.name === 'end-date')?.value;
+				const service = options?.find((o) => o.name === 'social')?.value;
+				const newStartDate = new Date(startDate).getTime();
+				const newEndDate = new Date(endDate).getTime();
 				if (
-					(Object.prototype.toString.call(newFromDate) !== '[object Date]' &&
-						isNaN(newFromDate)) ||
-					(Object.prototype.toString.call(newToDate) !== '[object Date]' &&
-						isNaN(newToDate))
+					(Object.prototype.toString.call(newStartDate) !== '[object Date]' &&
+						isNaN(newStartDate)) ||
+					(Object.prototype.toString.call(newEndDate) !== '[object Date]' &&
+						isNaN(newEndDate))
 				) {
 					res.status(400).json({ error: 'Invalid dates format.' });
 					return;
 				}
-				if (newFromDate > newToDate) {
+				if (newStartDate > newEndDate) {
 					res.status(400).json({
 						error: 'From date can not be newer than To date.',
 					});
 					return;
 				}
-				deferGetScreenshotsFromToDateRes(
+				deferGetScreenshotsStartToEndDateRes(
 					token,
 					userData,
 					context,
-					newFromDate,
-					newToDate,
-					social
+					newStartDate,
+					newEndDate,
+					service
 				);
 				res.send(response);
 				return;
