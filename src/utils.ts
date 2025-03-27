@@ -229,13 +229,13 @@ export async function deleteMostRecentScreenshot(
 
 export async function deleteSpecificScreenshot(
 	userId: string,
-	id: string,
+	screenshotId: string,
 	social?: string
 ): Promise<ScreenshotData> {
 	const resAPI: AxiosResponse<ScreenshotData> = await axios.delete(
 		`${API_URI}/user/specific-screenshot`,
 		{
-			data: { discordId: userId, id: id, social: social },
+			data: { discordId: userId, screenshotId: screenshotId, social: social },
 			headers: { 'Content-Type': 'application/json' },
 		}
 	);
