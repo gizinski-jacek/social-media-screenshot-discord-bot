@@ -64,10 +64,10 @@ export async function deferMostRecentScreenshotRes(
 	token: string,
 	user: User,
 	context: number,
-	social?: string
+	service?: string
 ): Promise<void> {
 	try {
-		const data = await getMostRecentScreenshot(user.id, social);
+		const data = await getMostRecentScreenshot(user.id, service);
 		data.url = await shortenUrl(data.url);
 		const message = formatMessage(data);
 		if (context === 0) {
@@ -85,10 +85,10 @@ export async function deferDeleteMostRecentScreenshotRes(
 	token: string,
 	user: User,
 	context: number,
-	social?: string
+	service?: string
 ): Promise<void> {
 	try {
-		const res = await deleteMostRecentScreenshot(user.id, social);
+		const res = await deleteMostRecentScreenshot(user.id, service);
 		res.url = 'Deleted';
 		const message = formatMessage(res);
 		if (context === 0) {
@@ -106,10 +106,10 @@ export async function deferDeleteSpecificScreenshotRes(
 	token: string,
 	user: User,
 	context: number,
-	id: string
+	screenshotId: string
 ): Promise<void> {
 	try {
-		const res = await deleteSpecificScreenshot(user.id, id);
+		const res = await deleteSpecificScreenshot(user.id, screenshotId);
 		res.url = 'Deleted';
 		const message = formatMessage(res);
 		if (context === 0) {
@@ -123,20 +123,20 @@ export async function deferDeleteSpecificScreenshotRes(
 	}
 }
 
-export async function deferGetScreenshotsFromToDateRes(
+export async function deferGetScreenshotsStartToEndDateRes(
 	token: string,
 	user: User,
 	context: number,
-	fromDate: string | number,
-	toDate: string | number,
-	social?: string
+	startDate: string | number,
+	endDate: string | number,
+	service?: string
 ): Promise<void> {
 	try {
-		const res = await getScreenshotFromToDateRes(
+		const res = await getScreenshotStartToEndDateRes(
 			user.id,
-			fromDate,
-			toDate,
-			social
+			startDate,
+			endDate,
+			service
 		);
 		const shortUrlsPromisesArray: (() => Promise<string>)[] = res.map(
 			(data) => () =>
@@ -202,11 +202,11 @@ export async function requestScreenshot(
 
 export async function getMostRecentScreenshot(
 	userId: string,
-	social?: string
+	service?: string
 ): Promise<ScreenshotData> {
 	const resAPI: AxiosResponse<ScreenshotData> = await axios.post(
 		`${API_URI}/user/recent-screenshot`,
-		{ discordId: userId, social: social },
+		{ discordId: userId, service: service },
 		{ headers: { 'Content-Type': 'application/json' } }
 	);
 	return resAPI.data;
@@ -214,12 +214,12 @@ export async function getMostRecentScreenshot(
 
 export async function deleteMostRecentScreenshot(
 	userId: string,
-	social?: string
+	service?: string
 ): Promise<ScreenshotData> {
 	const resAPI: AxiosResponse<ScreenshotData> = await axios.delete(
 		`${API_URI}/user/recent-screenshot`,
 		{
-			data: { discordId: userId, social: social },
+			data: { discordId: userId, service: service },
 			headers: { 'Content-Type': 'application/json' },
 		}
 	);
@@ -240,19 +240,19 @@ export async function deleteSpecificScreenshot(
 	return resAPI.data;
 }
 
-export async function getScreenshotFromToDateRes(
+export async function getScreenshotStartToEndDateRes(
 	userId: string,
-	fromDate: string | number,
-	toDate: string | number,
-	social?: string
+	startDate: string | number,
+	endDate: string | number,
+	service?: string
 ): Promise<ScreenshotData[]> {
 	const resAPI: AxiosResponse<ScreenshotData[]> = await axios.post(
 		`${API_URI}/user/screenshot-from-to-date`,
 		{
 			discordId: userId,
-			fromDate: fromDate,
-			toDate: toDate,
-			social: social,
+			startDate: startDate,
+			endDate: endDate,
+			service: service,
 		},
 		{ headers: { 'Content-Type': 'application/json' } }
 	);
