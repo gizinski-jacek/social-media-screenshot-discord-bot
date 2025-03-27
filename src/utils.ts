@@ -106,11 +106,10 @@ export async function deferDeleteSpecificScreenshotRes(
 	token: string,
 	user: User,
 	context: number,
-	id: string,
-	social?: string
+	id: string
 ): Promise<void> {
 	try {
-		const res = await deleteSpecificScreenshot(user.id, id, social);
+		const res = await deleteSpecificScreenshot(user.id, id);
 		res.url = 'Deleted';
 		const message = formatMessage(res);
 		if (context === 0) {
@@ -229,13 +228,12 @@ export async function deleteMostRecentScreenshot(
 
 export async function deleteSpecificScreenshot(
 	userId: string,
-	screenshotId: string,
-	social?: string
+	screenshotId: string
 ): Promise<ScreenshotData> {
 	const resAPI: AxiosResponse<ScreenshotData> = await axios.delete(
 		`${API_URI}/user/specific-screenshot`,
 		{
-			data: { discordId: userId, screenshotId: screenshotId, social: social },
+			data: { discordId: userId, screenshotId: screenshotId },
 			headers: { 'Content-Type': 'application/json' },
 		}
 	);
