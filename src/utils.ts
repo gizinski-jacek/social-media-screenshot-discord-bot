@@ -106,11 +106,10 @@ export async function deferGetScreenshotsFromToDateRes(
 	token: string,
 	user: User,
 	context: number,
-	fromDate: string,
-	toDate: string,
+	fromDate: string | number,
+	toDate: string | number,
 	social?: string
 ): Promise<void> {
-	let i = 0;
 	try {
 		const res = await getScreenshotFromToDateRes(
 			user.id,
@@ -208,13 +207,18 @@ export async function deleteMostRecentScreenshot(
 
 export async function getScreenshotFromToDateRes(
 	userId: string,
-	fromDate: string,
-	toDate: string,
+	fromDate: string | number,
+	toDate: string | number,
 	social?: string
 ): Promise<ScreenshotData[]> {
 	const resAPI: AxiosResponse<ScreenshotData[]> = await axios.post(
 		`${API_URI}/user/screenshot-from-to-date`,
-		{ discordId: userId, social: social, fromDate: fromDate, toDate: toDate },
+		{
+			discordId: userId,
+			fromDate: fromDate,
+			toDate: toDate,
+			social: social,
+		},
 		{ headers: { 'Content-Type': 'application/json' } }
 	);
 	return resAPI.data;
